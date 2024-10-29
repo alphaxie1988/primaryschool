@@ -2,7 +2,53 @@ import requests
 from requests.cookies import RequestsCookieJar
 import streamlit as st
 import pandas as pd
+import streamlit as st
+from streamlit_chat import message
+import os
+from openai import OpenAI
+import json
 
+
+
+
+# Streamlit app
+st.title("Singapore Primary School Chatbot")
+
+
+client = OpenAI(
+    # This is the default and can be omitted
+    api_key=os.environ.get("OPENAI_API_KEY"),
+)
+
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-4o-mini"
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+if prompt := st.chat_input("What is up?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
+        )
+        response = st.write_stream(stream)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+st.stop()
 # Create a session
 session = requests.Session()
 
@@ -53,13 +99,14 @@ df['total'] = df['total'].astype(int)
 
 # Filter DataFrame
 schools_of_interest = ["Greendale Primary School", "Mee Toh School", "Horizon Primary School"]
-filtered_df = df[df['title'].isin(schools_of_interest)][['title', 'avail', 'applicant']]
+filtered_df = df[df['title'].isin(schools_of_interest)][['title', 'avail', 'applicant','area']]
 
 
 st.write(filtered_df)
 
 schools_of_interest = ["St. Hilda's Primary School", "Gongshang Primary School"]
-filtered_df = df[df['title'].isin(schools_of_interest)][['title', 'avail', 'applicant']]
-
-
+filtered_df = df[df['title'].isin(schools_of_interest)][['title', 'avail', 'applicant','area']]
+grouped_df = df.groupby('area').sum().reset_index()
+grouped_df['lack'] = grouped_df['applicant']-grouped_df['avail']
+st.write(grouped_df)
 st.write(filtered_df)
