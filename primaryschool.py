@@ -6,47 +6,89 @@ import streamlit as st
 from streamlit_chat import message
 import os
 from openai import OpenAI
-import json
 
 
 
+tab1, tab2, tab3,tab4 = st.tabs(["CCA Finder","LLM Ask School Info", "About Us", "Methodology"])
 
+with tab1:
+    st.header("CCA Finder")
+
+    # Step 1: Read the CSV file into a pandas DataFrame
+    df = pd.read_csv('data/CCA.csv')
+
+    # Step 2: Get a list of unique data from the column `cca_generic_name`
+    unique_school_section = df['school_section'].unique()
+    unique_cca_names = df['cca_generic_name'].unique()
+    # Step 3: Create a dropdown list from the unique `cca_generic_name` values
+    selected_school_section = st.selectbox("Select a the level", unique_school_section)
+    selected_cca = st.selectbox("Select a CCA", unique_cca_names)
+    # Step 4: Filter the DataFrame to show `school_name` where `cca_generic_name` matches the selection
+    filtered_df = df[(df['cca_generic_name'] == selected_cca) & (df['school_section'] == selected_school_section)]
+
+    # Display the list of school names
+    st.write("Schools offering the selected CCA:")
+    st.write(filtered_df['school_name'].unique())
+with tab2:
+    st.header("LLM Ask School Info")
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=os.environ.get("OPENAI_API_KEY"),
+    )
+
+    if "openai_model" not in st.session_state:
+        st.session_state["openai_model"] = "gpt-4o-mini"
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("What is up?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=True,
+            )
+            response = st.write_stream(stream)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+with tab3:
+    st.header("About Us")
+    st.write("A detailed page outlining the project scope, objectives, data sources, and features.")
+    st.subheader("Use Case 1 - CCA Finder", divider=True)
+    st.write("Using Streamlit python to allow user quickly drill down in to the level (Primary, Secondary, JC) and choice of CCA, the system will return the list of school that provide the selected CCA")
+    st.divider()
+    st.subheader("Use Case 2 - Ask School General Information", divider=True)
+    st.write("Using LLM to ask school related information, example you can ask where is Ai Tong School")
+    st.divider()
+    st.subheader("Data source", divider=True)
+    st.write("""MOE (Ministry of Education)
+List of all schools with details on:
+
+General information of schools
+Subjects offered
+Co-curricular activities (CCAs)
+MOE programmes
+School Distinctive Programmes
+All information is accurate as at 24 Mar 2021.""")
+    st.write("https://data.gov.sg/datasets?topics=education&page=1&resultId=457")
+with tab4:
+    st.header("Methodology")
+    st.write("""A comprehensive explanation of the data flows and implementation details.
+A flowchart illustrating the process flow for each of the use cases in the application. For example, if the application has two main use cases: a) chat with information and b) intelligent search, each of these use cases should have its own flowchart.""")
 # Streamlit app
-st.title("Singapore Primary School Chatbot")
-
-
-client = OpenAI(
-    # This is the default and can be omitted
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
-
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-4o-mini"
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("What is up?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model=st.session_state["openai_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-        response = st.write_stream(stream)
-    st.session_state.messages.append({"role": "assistant", "content": response})
-
 
 st.stop()
 # Create a session
