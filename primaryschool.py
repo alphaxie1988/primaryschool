@@ -30,10 +30,10 @@ def app():
         if selection_1 == selection_2:
             st.warning("Please select two different options.")
             # Disable the submit button if selections are the same
-            submit_button = st.button("Compare the two School", disabled=True)
+            submit_button = st.button("Compare the two Schools", disabled=True)
         else:
             # Enable the submit button if selections are different
-            submit_button = st.button("Compare the two School")
+            submit_button = st.button("Compare the two Schools")
 
         if submit_button:
             client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -53,7 +53,7 @@ def app():
                 model=st.session_state["openai_model"],
                 messages=[
                     {"role": "system", "content": f"Use the following school information as context:\n\n{context}"},
-                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two school? If possible give a conclusion on which is a better school and why"}],
+                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why"}],
                 stream=True,
             )
             response = st.write_stream(stream)
@@ -197,8 +197,8 @@ School Distinctive Programmes
         graph.edge("Data Loader", "Pandas DataFrame")
         graph.edge("Pandas DataFrame", "User Select School's Level")
         graph.edge("User Select School's Level", "User Select Two Schools")
-        graph.edge("User Select Two Schools","Parse Information of the Two School as Context")
-        graph.edge("Parse Information of the Two School as Context","Display the LLM Response")
+        graph.edge("User Select Two Schools","Parse Information of the Two Schools as Context")
+        graph.edge("Parse Information of the Two Schools as Context","Display the LLM Response")
         st.graphviz_chart(graph)
         st.subheader("Use Case 2 - Ask School General Information", divider=True)
         # Create a graphlib graph object
