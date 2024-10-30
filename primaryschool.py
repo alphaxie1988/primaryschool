@@ -8,17 +8,54 @@ import graphviz
 
 load_dotenv()
 
+@st.cache_data
+def loadData():
+
+    school_info_df = pd.read_csv('data/generalInformation.csv')
+    school_info_df = school_info_df[school_info_df['mainlevel_code'] == "PRIMARY"]
+
+    ccadf = pd.read_csv('data/CCA.csv')
+    ccadf = ccadf[ccadf['school_name'].isin(school_info_df['school_name'])]
+    ccadf =  ccadf[['school_name','cca_generic_name']]
+    ccadf_pivot = ccadf.pivot_table(
+    index=["school_name"],
+    columns="cca_generic_name",
+    aggfunc=lambda x: 'Yes',
+    fill_value='No').reset_index()
+    ccadf_pivot.columns = [
+        f"CCA: {col}" if col not in ["school_name"] else col 
+        for col in ccadf_pivot.columns
+    ]
+
+ 
+    subjectdf = pd.read_csv('data/subjectsOffered.csv')
+    subjectdf = subjectdf[subjectdf['school_name'].isin(school_info_df['school_name'])]
+    subjectdf =  subjectdf[['school_name','subject_desc']]
+    subjectdf_pivot = subjectdf.pivot_table(
+    index=["school_name"],
+    columns="subject_desc",
+    aggfunc=lambda x: 'Yes',
+    fill_value='No').reset_index()
+    subjectdf_pivot.columns = [
+        f"subject offered: {col}" if col not in ["school_name"] else col 
+        for col in subjectdf_pivot.columns
+    ]
+
+    school_info_df = pd.merge(school_info_df, ccadf_pivot, on="school_name", how="left")
+    school_info_df = pd.merge(school_info_df, subjectdf_pivot, on="school_name", how="left")
+
+    school_info_df = school_info_df.fillna("No")
+    return school_info_df
+
 def app():
     if "context" not in st.session_state:
         st.session_state.context = ""
     def Compare_School():
         st.header("Compare School")
             # Sample options list
-        school_data = pd.read_csv('data/generalInformation.csv')
-        unique_school_section = school_data['mainlevel_code'].unique()
+        school_data = loadData()
         # Step 3: Create a dropdown list from the unique `cca_generic_name` values
-        selected_school_section = st.selectbox("Select a the level", unique_school_section)
-        school_data = school_data[school_data['mainlevel_code'] == selected_school_section]
+
         options = school_data["school_name"]
 
         # Dropdown 1
@@ -69,7 +106,7 @@ Always consult with qualified professionals for accurate and personalized advice
         st.header("LLM Ask School Info")
         rag = st.checkbox("Use RAG",True)
         # Sample data loading (replace with your actual data file)
-        school_data = pd.read_csv('data/generalInformation.csv')
+        school_data = loadData()
         school_data["school_name"] = school_data["school_name"].str.replace('SCHOOL', '',case=False).str.strip()
         #st.dataframe(school_data)
         # Function to retrieve school information based on query
@@ -134,7 +171,7 @@ Always consult with qualified professionals for accurate and personalized advice
                 response = st.write_stream(stream)
             st.session_state.messages.append({"role": "assistant", "content": response})
         if len(st.session_state.messages) == 0:
-            st.info("Try asking: Where is Mee Toh and who is the Principal and VPs?")
+            st.info("Try asking: Where is Mee Toh and who is the princiapl of the school? What mother tongue does it provide? Does it have Choir as CCA?")
         else:
             with st.expander("Disclaimer"):
                 st.write("""**IMPORTANT NOTICE**: This web application is a prototype developed for educational purposes only. The information provided here is NOT intended for real-world usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters.
@@ -150,13 +187,11 @@ Always consult with qualified professionals for accurate and personalized advice
     
 
         # Step 2: Get a list of unique data from the column `cca_generic_name`
-        unique_school_section = df['school_section'].unique()
         unique_cca_names = df['cca_generic_name'].unique()
         # Step 3: Create a dropdown list from the unique `cca_generic_name` values
-        selected_school_section = st.selectbox("Select a the level", unique_school_section)
         selected_cca = st.selectbox("Select a CCA", unique_cca_names)
         # Step 4: Filter the DataFrame to show `school_name` where `cca_generic_name` matches the selection
-        filtered_df = df[(df['cca_generic_name'] == selected_cca) & (df['school_section'] == selected_school_section)]
+        filtered_df = df[(df['cca_generic_name'] == selected_cca) & (df['school_section'] == 'PRIMARY')]
 
         # Display the list of school names
         st.write("Schools offering the selected CCA:")
@@ -180,7 +215,7 @@ Always consult with qualified professionals for accurate and personalized advice
         st.write("Response after RAG")
         st.image("meetoh2.png")
         st.image("meetoh3.png",caption="Actual Location of Mee Toh", width=450)
-        st.write("As you can see before RAG the address was very vague. Sometime it might even give wrong answer")
+        st.write("As you can see before RAG the address was very vague. Sometime it might even give wrong answer. The LLM also can answer more definitive after RAG")
         st.divider()
         st.subheader("Use Case 3 - CCA Finder", divider=True)
         st.write("Using Streamlit python to allow user quickly drill down in to the level (Primary, Secondary, JC) and choice of CCA, the system will return the list of school that provide the selected CCA")
@@ -189,11 +224,11 @@ Always consult with qualified professionals for accurate and personalized advice
         st.write("""MOE (Ministry of Education)
     List of all schools with details on:
 ```
-General information of schools
-Subjects offered
-Co-curricular activities (CCAs)
-MOE programmes
-School Distinctive Programmes
+General information of schools ✅
+Subjects offered ✅
+Co-curricular activities (CCAs) ✅
+MOE programmes ❌
+School Distinctive Programmes ❌
 ```""")
         st.write("All information is accurate as at 24 Mar 2021.")
         st.write("https://data.gov.sg/datasets?topics=education&page=1&resultId=457")
@@ -207,8 +242,8 @@ School Distinctive Programmes
         graph = graphviz.Digraph()
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
-        graph.edge("Pandas DataFrame", "User Select School's Level")
-        graph.edge("User Select School's Level", "User Select Two Schools")
+        graph.edge("Pandas DataFrame", "Merge CCA/Subject/General Information Tables")
+        graph.edge("Merge CCA/Subject/General Information Tables", "User Select Two Schools")
         graph.edge("User Select Two Schools","Parse Information of the Two Schools as Context")
         graph.edge("Parse Information of the Two Schools as Context","Display the LLM Response")
         st.graphviz_chart(graph)
@@ -217,7 +252,8 @@ School Distinctive Programmes
         graph = graphviz.Digraph()
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
-        graph.edge("Pandas DataFrame", "User Submit Query")
+        graph.edge("Pandas DataFrame", "Merge CCA/Subject/General Information Tables")
+        graph.edge("Merge CCA/Subject/General Information Tables", "User Submit Query")
         graph.edge("User Submit Query","Is Rag Enabled")
         graph.edge("Is Rag Enabled","If School name appears in User Submitted Query","Yes")
         graph.edge("If School name appears in User Submitted Query","Perform RAG","Yes")
@@ -234,17 +270,15 @@ School Distinctive Programmes
         st.divider()
         st.subheader("Use Case 3 - CCA Finder", divider=True)
         graph = graphviz.Digraph()
-        graph.edge("School Data via data.gov.sg", "Data Loader")
+        graph.edge("School CCA Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
-        graph.edge("Pandas DataFrame", "User Select School's Level")
-        graph.edge("User Select School's Level","User Select CCA")
+        graph.edge("Pandas DataFrame","User Select CCA")
         graph.edge("User Select CCA","Display a list of School Match Condition")
         st.graphviz_chart(graph)
 
 
     pg = st.navigation([st.Page(Compare_School), st.Page(LLM_Ask_School_Info),st.Page(CCA_Finder), st.Page(About_Us), st.Page(Methodology)])
     pg.run()
-
 
 
 # Define the hardcoded password
