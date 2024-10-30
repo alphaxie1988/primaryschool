@@ -118,20 +118,21 @@ def app():
         st.image("meetoh1.png")
         st.write("Response after RAG")
         st.image("meetoh2.png")
-        st.image("meetoh3.png")
+        st.image("meetoh3.png",caption="Actual Location of Mee Toh", width=450)
         st.write("As you can see before RAG the address was very vague. Sometime it might even give wrong answer")
         st.divider()
 
         st.subheader("Data source", divider=True)
         st.write("""MOE (Ministry of Education)
     List of all schools with details on:
-
-    General information of schools
-    Subjects offered
-    Co-curricular activities (CCAs)
-    MOE programmes
-    School Distinctive Programmes
-    All information is accurate as at 24 Mar 2021.""")
+```
+General information of schools
+Subjects offered
+Co-curricular activities (CCAs)
+MOE programmes
+School Distinctive Programmes
+```""")
+        st.write("All information is accurate as at 24 Mar 2021.")
         st.write("https://data.gov.sg/datasets?topics=education&page=1&resultId=457")
 
     def Methodology():
