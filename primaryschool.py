@@ -58,7 +58,12 @@ def app():
             )
             response = st.write_stream(stream)
             if response:
-                st.warning("Please do not take the LLM analytics too seriously.")
+                with st.expander("Disclaimer"):
+                    st.write("""**IMPORTANT NOTICE**: This web application is a prototype developed for educational purposes only. The information provided here is NOT intended for real-world usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters.
+
+Furthermore, please be aware that the large language model may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output.
+
+Always consult with qualified professionals for accurate and personalized advice.""")
 
     def LLM_Ask_School_Info():
         st.header("LLM Ask School Info")
@@ -130,6 +135,13 @@ def app():
             st.session_state.messages.append({"role": "assistant", "content": response})
         if len(st.session_state.messages) == 0:
             st.info("Try asking: Where is Mee Toh and who is the Principal and VPs?")
+        else:
+            with st.expander("Disclaimer"):
+                st.write("""**IMPORTANT NOTICE**: This web application is a prototype developed for educational purposes only. The information provided here is NOT intended for real-world usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters.
+
+Furthermore, please be aware that the large language model may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output.
+
+Always consult with qualified professionals for accurate and personalized advice.""")
     def CCA_Finder():
         st.header("CCA Finder")
 
