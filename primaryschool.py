@@ -15,6 +15,10 @@ def app():
         st.header("Compare School")
             # Sample options list
         school_data = pd.read_csv('data/generalInformation.csv')
+        unique_school_section = school_data['mainlevel_code'].unique()
+        # Step 3: Create a dropdown list from the unique `cca_generic_name` values
+        selected_school_section = st.selectbox("Select a the level", unique_school_section)
+        school_data = school_data[school_data['mainlevel_code'] == selected_school_section]
         options = school_data["school_name"]
 
         # Dropdown 1
@@ -191,7 +195,8 @@ School Distinctive Programmes
         graph = graphviz.Digraph()
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
-        graph.edge("Pandas DataFrame", "User Select Two Schools")
+        graph.edge("Pandas DataFrame", "User Select School's Level")
+        graph.edge("User Select School's Level", "User Select Two Schools")
         graph.edge("User Select Two Schools","Parse Information of the Two School as Context")
         graph.edge("Parse Information of the Two School as Context","Display the LLM Response")
         st.graphviz_chart(graph)
@@ -201,7 +206,7 @@ School Distinctive Programmes
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
         graph.edge("Pandas DataFrame", "User Submit Query")
-        graph.edge( "User Submit Query","Is Rag Enabled")
+        graph.edge("User Submit Query","Is Rag Enabled")
         graph.edge("Is Rag Enabled","If School name appears in User Submitted Query","Yes")
         graph.edge("If School name appears in User Submitted Query","Perform RAG","Yes")
         graph.edge("Is Rag Enabled","Use blank Context","No")
