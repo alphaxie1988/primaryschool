@@ -7,7 +7,12 @@ import os
 import graphviz
 
 load_dotenv()
+st.set_page_config(
+    page_title="Primay School",
+    page_icon="📖",
+    )
 
+st.logo("logobig.png", icon_image="logosmall.png",size='large')
 @st.cache_data
 def loadData():
 
@@ -46,6 +51,7 @@ def loadData():
 
     school_info_df = school_info_df.fillna("No")
     return school_info_df
+@st.cache_data
 def get_school_info(school_data, query,previousContext):
             # Find the school name mentioned in the query
             school_name = []
