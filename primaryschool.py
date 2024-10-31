@@ -46,7 +46,27 @@ def loadData():
 
     school_info_df = school_info_df.fillna("No")
     return school_info_df
+def get_school_info(school_data, query,previousContext):
+            # Find the school name mentioned in the query
+            school_name = []
+            for name in school_data["school_name"]:
+                if name.lower() in query.lower():
+                    school_name.append(name)
 
+            if len(school_name) >= 1:
+                # Get relevant row from the DataFrame
+                context = ""
+                for school in school_name:
+                    context += "\nInformation about "+school+"\n"
+                    school_info = school_data[school_data["school_name"] == school].to_dict(orient="records")[0]
+                # Format school information as context
+                    context += "\n".join([f"{key}: {value}" for key, value in school_info.items() if pd.notna(value)])
+                st.write("🛜 Context Passed to LLM")
+                #st.write(context)
+                return context
+            else:
+                return previousContext
+            
 def app():
     if "context" not in st.session_state:
         st.session_state.context = ""
@@ -110,26 +130,7 @@ Always consult with qualified professionals for accurate and personalized advice
         school_data["school_name"] = school_data["school_name"].str.replace('SCHOOL', '',case=False).str.strip()
         #st.dataframe(school_data)
         # Function to retrieve school information based on query
-        def get_school_info(school_data, query,previousContext):
-            # Find the school name mentioned in the query
-            school_name = []
-            for name in school_data["school_name"]:
-                if name.lower() in query.lower():
-                    school_name.append(name)
-
-            if len(school_name) >= 1:
-                # Get relevant row from the DataFrame
-                context = ""
-                for school in school_name:
-                    context += "\nInformation about "+school+"\n"
-                    school_info = school_data[school_data["school_name"] == school].to_dict(orient="records")[0]
-                # Format school information as context
-                    context += "\n".join([f"{key}: {value}" for key, value in school_info.items() if pd.notna(value)])
-                st.write("🛜 Context Passed to LLM")
-                #st.write(context)
-                return context
-            else:
-                return previousContext
+        
         # Set up OpenAI client
         client = OpenAI(
             # This is the default and can be omitted
@@ -203,6 +204,11 @@ Always consult with qualified professionals for accurate and personalized advice
         st.subheader("Use Case 1 - Compare School", divider=True)
         st.write("This tool allows you to select two Singapore Primary School and do a detailed analytics on the school.")
         st.write("This use case uses canned prompt approach by passing user selected information as context for the LLM to make analysis")
+        st.write("Currently The canned Prompt is")
+        st.info("Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why")
+        school_data = loadData()
+        st.info(get_school_info(school_data,"Mee Toh School",""))
+        
         st.divider()
         st.subheader("Use Case 2 - Ask School General Information", divider=True)
         st.write("""Using LLM to ask school related information, example you can ask where is Mee Toh School
