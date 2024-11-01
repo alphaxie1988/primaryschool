@@ -294,7 +294,7 @@ School Distinctive Programmes ❌
 
 
 # Define the hardcoded password
-correct_password = "apple"
+correct_password = os.environ.get("password")
 
 # Initialize session state to store whether access has been granted
 if "authenticated" not in st.session_state:
