@@ -153,7 +153,7 @@ Always consult with qualified professionals for accurate and personalized advice
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        if prompt := st.chat_input("What is up?"):
+        if prompt := st.chat_input("Where is Mee Toh School?"):
             with st.chat_message("user"):
                 st.markdown(prompt)
 
@@ -170,7 +170,7 @@ Always consult with qualified professionals for accurate and personalized advice
                 stream = client.chat.completions.create(
                     model=st.session_state["openai_model"],
                     messages=[
-                        {"role": "system", "content": f"Use the following school information as context:\n\n{st.session_state.context}"},
+                        {"role": "system", "content": f"Use the following school information as context:\n\n{st.session_state.context}, please only reply if question is related to the context."},
                         *st.session_state.messages  # Append user and assistant messages
                     ],
                     stream=True,
