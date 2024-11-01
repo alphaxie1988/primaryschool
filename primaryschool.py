@@ -91,7 +91,7 @@ def app():
         selection_2 = st.selectbox("Select option 2:", options, key="dropdown_2")
         # Check if selections are different
         if selection_1 == selection_2:
-            st.warning("Please select two different options.")
+            st.warning("Please select two different school.")
             # Disable the submit button if selections are the same
             submit_button = st.button("Compare the two Schools", disabled=True)
         else:
