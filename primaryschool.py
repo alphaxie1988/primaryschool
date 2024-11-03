@@ -74,6 +74,8 @@ def get_school_info(school_data, query,previousContext):
                     school_info = school_data[school_data["school_name"] == school].to_dict(orient="records")[0]
                 # Format school information as context
                     context += "\n".join([f"{key}: {value}" for key, value in school_info.items() if pd.notna(value)])
+                if len(context) > 10:
+                    context += "\n\nNote that the popularity score is calculated based on number of applicant in phase 2B divided by the amount of vacancy in Phase 2B. The higher number mean more popular."
                 st.write("🛜 Context Passed to LLM")
                 #st.write(context)
                 return context
@@ -123,7 +125,7 @@ def app():
                 model=st.session_state["openai_model"],
                 messages=[
                     {"role": "system", "content": f"Use the following school information as context:\n\n{context}"},
-                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why. Note that the popularity score is calculated based on number of applicant in phase 2B divided by the amount of vacancy in Phase 2B. The higher number mean more popular"}],
+                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why. "}],
                 stream=True,
             )
             response = st.write_stream(stream)
@@ -218,7 +220,7 @@ Always consult with qualified professionals for accurate and personalized advice
         st.write("This tool allows you to select two Singapore Primary School and do a detailed analytics on the school.")
         st.write("This use case uses canned prompt approach by passing user selected information as context for the LLM to make analysis")
         st.write("Currently The canned Prompt is")
-        st.info("Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why. Note that the popularity score is calculated based on number of applicant in phase 2B divided by the amount of vacancy in Phase 2B. The higher number mean more popular")
+        st.info("Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why.")
         school_data = loadData()
         st.info(get_school_info(school_data,"Mee Toh School",""))
         
@@ -321,7 +323,7 @@ placeholder = st.empty()
 # Check if the user is authenticated
 if not st.session_state.authenticated:
     # Show password input inside the placeholder
-    password = placeholder.text_input("This website is not affiliated with the Ministry of Education (MOE) and is intended solely for testing and educational purposes.\n\n\n\nEnter password:", type="password")
+    password = placeholder.text_input("This website is not affiliated with the Ministry of Education (MOE) and is intended solely for testing and educational purposes.\n\n \n\nEnter password:", type="password")
 
     if password:
         # Verify if the password is correct
