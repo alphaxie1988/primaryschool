@@ -46,8 +46,15 @@ def loadData():
         for col in subjectdf_pivot.columns
     ]
 
+    popularitydf = pd.read_csv('data/popularity.csv')
+    popularitydf = popularitydf[popularitydf['school_name'].isin(school_info_df['school_name'])]
+    popularitydf =  popularitydf[['school_name','popularity']]
+   
+
+
     school_info_df = pd.merge(school_info_df, ccadf_pivot, on="school_name", how="left")
     school_info_df = pd.merge(school_info_df, subjectdf_pivot, on="school_name", how="left")
+    school_info_df = pd.merge(school_info_df, popularitydf, on="school_name", how="left")
 
     school_info_df = school_info_df.fillna("No")
     return school_info_df
@@ -116,7 +123,7 @@ def app():
                 model=st.session_state["openai_model"],
                 messages=[
                     {"role": "system", "content": f"Use the following school information as context:\n\n{context}"},
-                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why"}],
+                {"role": "user", "content": "Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why. Note that the popularity score is calculated based on number of applicant in phase 2B divided by the amount of vacancy in Phase 2B. The higher number mean more popular"}],
                 stream=True,
             )
             response = st.write_stream(stream)
@@ -211,7 +218,7 @@ Always consult with qualified professionals for accurate and personalized advice
         st.write("This tool allows you to select two Singapore Primary School and do a detailed analytics on the school.")
         st.write("This use case uses canned prompt approach by passing user selected information as context for the LLM to make analysis")
         st.write("Currently The canned Prompt is")
-        st.info("Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why")
+        st.info("Can you come out with the comprehensive comparison based of the two schools? If possible give a conclusion on which is a better school and why. Note that the popularity score is calculated based on number of applicant in phase 2B divided by the amount of vacancy in Phase 2B. The higher number mean more popular")
         school_data = loadData()
         st.info(get_school_info(school_data,"Mee Toh School",""))
         
@@ -244,7 +251,13 @@ School Distinctive Programmes ❌
 ```""")
         st.write("All information is accurate as at 24 Mar 2021.")
         st.write("https://data.gov.sg/datasets?topics=education&page=1&resultId=457")
-
+        st.divider()
+        st.write("""Primary 1 Registration 2024 Data
+```
+    List of all schools with the vacancy and applicant in phase 2B 2024 ✅
+```
+""")        
+        st.write("https://mathnuggets.sg/best-primary-schools-in-singapore/")
     def Methodology():
         st.header("Methodology")
         st.write("""A comprehensive explanation of the data flows and implementation details.
@@ -252,6 +265,7 @@ School Distinctive Programmes ❌
         st.divider()
         st.subheader("Use Case 1 - Compare School", divider=True)
         graph = graphviz.Digraph()
+        graph.edge("School Popularity via mathnuggets.sg", "Data Loader")
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
         graph.edge("Pandas DataFrame", "Merge CCA/Subject/General Information Tables")
@@ -262,6 +276,7 @@ School Distinctive Programmes ❌
         st.subheader("Use Case 2 - Ask School General Information", divider=True)
         # Create a graphlib graph object
         graph = graphviz.Digraph()
+        graph.edge("School Popularity via mathnuggets.sg", "Data Loader")
         graph.edge("School Data via data.gov.sg", "Data Loader")
         graph.edge("Data Loader", "Pandas DataFrame")
         graph.edge("Pandas DataFrame", "Merge CCA/Subject/General Information Tables")
