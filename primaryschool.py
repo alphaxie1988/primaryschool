@@ -321,7 +321,7 @@ placeholder = st.empty()
 # Check if the user is authenticated
 if not st.session_state.authenticated:
     # Show password input inside the placeholder
-    password = placeholder.text_input("Enter password:", type="password")
+    password = placeholder.text_input("This website is not affiliated with the Ministry of Education (MOE) and is intended solely for testing and educational purposes.\n\n\n\nEnter password:", type="password")
 
     if password:
         # Verify if the password is correct
