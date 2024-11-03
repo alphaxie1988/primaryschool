@@ -9,9 +9,11 @@ import graphviz
 load_dotenv()
 st.set_page_config(
     page_title="Primay School",
-    page_icon="📖",
+    page_icon="favicon.ico",
     )
-
+with open( "style.css" ) as css:
+    st.markdown( f'<style>{css.read()}</style>' , unsafe_allow_html= True)
+    
 st.logo("logobig.png", icon_image="logosmall.png",size='large')
 @st.cache_data
 def loadData():
